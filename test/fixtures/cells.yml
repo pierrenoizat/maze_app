@@ -1,0 +1,23 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  row: 1
+  column: 1
+  height: 1
+  level: 1
+  maze: 
+  north: 1
+  south: 1
+  east: 1
+  west: 
+
+two:
+  row: 1
+  column: 1
+  height: 1
+  level: 1
+  maze: 
+  north: 1
+  south: 1
+  east: 1
+  west: 

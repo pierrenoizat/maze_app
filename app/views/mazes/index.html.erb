@@ -1,0 +1,12 @@
+<h1>Mazes</h1>
+
+
+<ul>
+  <% @mazes.each do |maze| %>
+    <li>
+      <%= link_to maze.title, maze %>
+    </li>
+  <% end %>
+</ul>
+
+<%= link_to "New Maze", new_maze_path %>

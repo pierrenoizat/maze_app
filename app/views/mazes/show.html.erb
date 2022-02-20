@@ -1,0 +1,10 @@
+<h2><%= @maze.title %></h2>
+<p>Algorithm: <%= @maze.algo %></p>
+<p><%= image_tag(@maze.file_name) %></p>
+<p>Image file name: <%= @maze.file_name %></p>
+<ul>
+  <li><%= link_to "Edit", edit_maze_path(@maze) %></li>
+  <li><%= link_to(maze_path(@maze), {:controller =>"mazes", :action =>"destroy", :id =>"#{@maze.id}", :data => { :confirm => "Are you sure?" }, :method => :delete, :class => 'btn btn-default btn-xs btn-danger'}) do %>
+   <i class="fa fa-remove"></i> Delete<% end %></li>
+   <li><%= link_to "Back to Mazes", mazes_path %></li>
+</ul>

@@ -1,0 +1,35 @@
+<%= form_with model: maze, local: true do |form| %>
+
+  <div>
+    <%= form.label :title %><br>
+    <%= form.text_field :title %>
+    <% maze.errors.full_messages_for(:title).each do |message| %>
+      <div><%= message %></div>
+    <% end %>
+  </div>
+	<br>
+  <div>
+    <%= form.label :algo %><br>
+    <div class="input-field">
+      <%= form.select(:algo, Maze.algos.keys.map {|a| [a.upcase,a]}) %>
+    </div>
+  </div>
+	<br>
+  <div>
+   <%= form.label :row_count %><br>
+   <div class="input-field">
+     <%= form.select(:row_count, [5,10,16,20]) %>
+   </div>
+  </div>
+	<br>
+  <div>
+   <%= form.label :column_count %><br>
+   <div class="input-field">
+     <%= form.select(:column_count, [5,10,16,20]) %>
+   </div>
+  </div>
+	<br>
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>
