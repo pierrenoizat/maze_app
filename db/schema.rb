@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_02_20_201909) do
+ActiveRecord::Schema.define(version: 2022_02_26_140348) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -28,6 +28,7 @@ ActiveRecord::Schema.define(version: 2022_02_20_201909) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "links", default: [], null: false, array: true
+    t.integer "distance"
     t.index ["maze_id"], name: "index_cells_on_maze_id"
   end
 
@@ -39,6 +40,8 @@ ActiveRecord::Schema.define(version: 2022_02_20_201909) do
     t.string "file_name"
     t.integer "row_count"
     t.integer "column_count"
+    t.string "background"
+    t.integer "color"
   end
 
   add_foreign_key "cells", "mazes"

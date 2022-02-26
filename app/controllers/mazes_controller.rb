@@ -101,13 +101,16 @@ class MazesController < ApplicationController
       @maze.file_name = @filename
       @maze.save
       @maze.reload
+      @maze.compute_distances
+      @maze.save
+      @maze.reload
       @maze.to_png_v2.save(@filename)
       destination = "/Users/noizat/code/workspace/maze_app/app/assets/images/#{@filename}"
       FileUtils.copy_file(@filename, destination, preserve = false, dereference = true)
       FileUtils.rm @filename, :force => true
-      redirect_to @maze
+      redirect_to @maze, successs: "Maze was created and saved successfully."
     else
-      render :new, status: :unprocessable_entity
+      redirect_to new_maze_path, danger: "Maze could not be saved: some field must be missing."
     end
   end
   
@@ -138,7 +141,7 @@ class MazesController < ApplicationController
   private
   
   def maze_params
-    params.require(:maze).permit(:title, :algo, :row_count, :column_count)
+    params.require(:maze).permit(:title, :algo, :row_count, :column_count, :background, :color)
   end
     
 end

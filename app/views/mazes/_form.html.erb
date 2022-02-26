@@ -30,6 +30,13 @@
   </div>
 	<br>
   <div>
+   <%= form.label :color %><br>
+   <div class="input-field">
+	 <%= form.select :color, options_for_select(Maze.colors.map {|key, value| [key.titleize, Maze.colors.key(value)]}) %>
+   </div>
+  </div>
+	<br>
+  <div>
     <%= form.submit %>
   </div>
 <% end %>
