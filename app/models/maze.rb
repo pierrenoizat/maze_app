@@ -60,7 +60,6 @@ class Maze < ApplicationRecord
                    honeydew: 66,
                    hotpink: 67,
                    indianred: 68,
-                   indigo: 69,
                    ivory: 70,
                    lavenderblush: 71,
                    lawngreen: 72,
@@ -211,7 +210,7 @@ class Maze < ApplicationRecord
     end
   end
   
-  def to_png_v2(cell_size: 10)
+  def to_png(cell_size: 10, solution:true)
     img_width = cell_size * self.column_count
     img_height = cell_size * self.row_count
     
@@ -228,7 +227,7 @@ class Maze < ApplicationRecord
         x2 = (cell.column + 1) * cell_size
         y2 = (cell.row + 1) * cell_size
 
-        if mode == :backgrounds
+        if mode == :backgrounds and solution
           #hex_color = '#eaffff' # even lighter 
           #color = ChunkyPNG::Color.from_hex(hex_color)
           color = background_color_for(cell)
@@ -270,9 +269,23 @@ class Maze < ApplicationRecord
   def get_rgb_color(predefined_color, intensity)
     hex_color = "0x"+ predefined_color.to_s(16)
     color = Color.from_hex(hex_color)
-    red = ( Color.r(color) * intensity ).round
-    green = ( Color.g(color) * intensity ).round
-    blue = ( Color.b(color) * intensity ).round
+    red = Color.r(color)
+    green = Color.g(color)
+    blue = Color.b(color)
+    rgb = [ red, green, blue]
+    case rgb.max
+    when red
+      intensity = (255/red).to_f * intensity
+    when green
+      intensity = (255/green).to_f * intensity
+    when blue
+      intensity = (255/blue).to_f * intensity
+    end
+    
+    red = ( red * intensity ).round
+    green = ( green * intensity ).round
+    blue = ( blue * intensity ).round
+    
     Color.rgb(red, green, blue)
   end
   
