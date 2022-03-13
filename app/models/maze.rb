@@ -3,6 +3,9 @@ class Maze < ApplicationRecord
   has_many :cells, dependent: :destroy
   
   enum algo: { sidewinder: 0, aldous_broder: 1, kruskals: 2, binary_tree: 3 }
+  enum palette: { plain_red: 0, plain_orange: 1, plain_yellow: 2, light_green: 3,plain_green: 4, 
+              marine_green: 5, light_blue: 6, plain_blue: 7, marine_blue: 8, plain_violet: 9,
+               plain_pink: 10, plain_purple: 11, plain_grey: 12}
   enum color: { white: 0, burgundy: 1, green: 2, blue: 3, kaki: 4, turquoise: 5, aliceblue: 6, burlywood: 7, fuchsia: 8,
                khaki: 9, lavender: 10, lightsalmon: 11,
                    antiquewhite: 12,
@@ -152,6 +155,7 @@ class Maze < ApplicationRecord
   validates :algo, inclusion: { in: algos.keys, message: :invalid }, :allow_nil => true
   validates :background, inclusion: { in: ['white','burgundy','green','blue', 'kaki','turquoise'], message: :invalid }, :allow_nil => true
   validates :color, inclusion: { in: colors.keys, message: :invalid }, :allow_nil => true
+  validates :palette, inclusion: { in: palettes.keys, message: :invalid }, :allow_nil => true
   
   attr_reader :rows, :columns
   
@@ -261,9 +265,79 @@ class Maze < ApplicationRecord
       when 'kaki'
         Color.rgb(bright, bright, dark)
       else
-        predefined_color = Color::PREDEFINED_COLORS[self.color.to_sym]
-        get_rgb_color(predefined_color, intensity)
+        if self.palette
+          get_color_from_palette(self.palette, intensity)
+        else
+          predefined_color = Color::PREDEFINED_COLORS[self.color.to_sym]
+          get_rgb_color(predefined_color, intensity)
+        end
     end
+  end
+  
+  def get_color_from_palette(palette,intensity)
+    case self.palette
+    when 'plain_red'
+      h = { "0" => "0x330000", "1" => "0x660000", "2" => "0x990000", "3" => "0xCC0000",
+            "4" => "0xFF0000", "5" => "0xFF3333", "6" => "0xFF6666", "7" => "0xFF9999",
+            "8" => "0xFFCCCC", "9" => "0xFFFFFF", "10" => "0xFFFFFF" }
+    when 'plain_yellow'
+      h = { "0" => "0x331900", "1" => "0x666600", "2" => "0x999900", "3" => "0xCCCC00",
+            "4" => "0xFFFF00", "5" => "0xFFFF33", "6" => "0xFFFF66", "7" => "0xFFFF99",
+            "8" => "0xFFFFCC", "9" => "0xFFFFFF", "10" => "0xFFFFFF" }
+    when 'plain_orange'
+      h = { "0" => "0x331900", "1" => "0x663300", "2" => "0x994C00", "3" => "0xCC6600",
+            "4" => "0xFF8000", "5" => "0xFF9933", "6" => "0xFFB266", "7" => "0xFFCC99",
+            "8" => "0xFFE5CC", "9" => "0xFFFFFF", "10" => "0xFFFFFF" }
+    when 'light_green'
+      h = { "0" => "0x193300", "1" => "0x336600", "2" => "0x4C9900", "3" => "0x66CC00",
+            "4" => "0x80FF00", "5" => "0x99FF33", "6" => "0xB2FF66", "7" => "0xCCFF99",
+            "8" => "0xE5FFCC", "9" => "0xFFFFFF", "10" => "0xFFFFFF" }
+    when 'plain_green'
+      h = { "0" => "0x003300", "1" => "0x006600", "2" => "0x009900", "3" => "0x00CC00",
+            "4" => "0x00FF00", "5" => "0x33FF33", "6" => "0x66FF66", "7" => "0x99FF99",
+            "8" => "0xCCFFCC", "9" => "0xFFFFFF", "10" => "0xFFFFFF" }
+    when 'marine_green'
+      h = { "0" => "0x003319", "1" => "0x006633", "2" => "0x00994C", "3" => "0x00CC66",
+            "4" => "0x00FF80", "5" => "0x33FF99", "6" => "0x66FFB2", "7" => "0x99FFCC",
+            "8" => "0xCCFFE5", "9" => "0xFFFFFF", "10" => "0xFFFFFF" }
+    when 'light_blue'
+      h = { "0" => "0x003333", "1" => "0x006666", "2" => "0x009999", "3" => "0x00CCCC",
+            "4" => "0x00FFFF", "5" => "0x33FFFF", "6" => "0x66FFFF", "7" => "0x99FFFF",
+            "8" => "0xCCFFFF", "9" => "0xFFFFFF", "10" => "0xFFFFFF" }
+    when 'plain_blue'
+      h = { "0" => "0x001933", "1" => "0x003366", "2" => "0x004C99", "3" => "0x0066CC",
+            "4" => "0x0080FF", "5" => "0x3399FF", "6" => "0x66B2FF", "7" => "0x99CCFF",
+            "8" => "0xCCE5FF", "9" => "0xFFFFFF", "10" => "0xFFFFFF" }
+    when 'marine_blue'
+      h = { "0" => "0x000033", "1" => "0x000066", "2" => "0x000099", "3" => "0x0000CC",
+            "4" => "0x0000FF", "5" => "0x3333FF", "6" => "0x6666FF", "7" => "0x9999FF",
+            "8" => "0xCCCCFF", "9" => "0xFFFFFF", "10" => "0xFFFFFF" }
+    when 'plain_violet'
+      h = { "0" => "0x190033", "1" => "0x330066", "2" => "0x4C0099", "3" => "0x6600CC",
+            "4" => "0x7F00FF", "5" => "0x9933FF", "6" => "0xB266FF", "7" => "0xCC99FF",
+            "8" => "0xE5CCFF", "9" => "0xFFFFFF", "10" => "0xFFFFFF" }
+    when 'plain_pink'
+      h = { "0" => "0x330033", "1" => "0x660066", "2" => "0x990099", "3" => "0xCC00CC",
+            "4" => "0xFF00FF", "5" => "0xFF33FF", "6" => "0xFF66FF", "7" => "0xFF99FF",
+            "8" => "0xFFCCFF", "9" => "0xFFFFFF", "10" => "0xFFFFFF" }
+    when 'plain_purple'
+      h = { "0" => "0x330019", "1" => "0x660033", "2" => "0x99004C", "3" => "0xCC0066",
+            "4" => "0xFF007F", "5" => "0xFF3399", "6" => "0xFF66B2", "7" => "0xFF99CC",
+            "8" => "0xFFCCE5", "9" => "0xFFFFFF", "10" => "0xFFFFFF" }
+    else 
+      h = { "0" => "0x000000", "1" => "0x202020", "2" => "0x404040", "3" => "0x606060",
+            "4" => "0x808080", "5" => "0xA0A0A0", "6" => "0xC0C0C0", "7" => "0xE0E0E0",
+            "8" => "0xFFFFFF", "9" => "0xFFFFFF", "10" => "0xFFFFFF" }
+    end
+    
+    i = ((intensity*100).round/10).to_s
+    hex_color = h[i]
+    color = Color.from_hex(hex_color)
+    red = Color.r(color)
+    green = Color.g(color)
+    blue = Color.b(color)
+    
+    Color.rgb(red, green, blue)
   end
   
   def get_rgb_color(predefined_color, intensity)

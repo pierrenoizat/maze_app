@@ -151,7 +151,7 @@ class MazesController < ApplicationController
   private
   
   def maze_params
-    params.require(:maze).permit(:title, :algo, :row_count, :column_count, :background, :color)
+    params.require(:maze).permit(:title, :algo, :row_count, :column_count, :background, :color, :palette)
   end
     
 end
