@@ -23,80 +23,7 @@ class MazesController < ApplicationController
         end
       end
       @maze.configure_cells
-      
-      case @maze.algo
-      when "sidewinder"
-        row_max = @maze.row_count
-        for i in 1..row_max
-          @maze.reload
-          row = @maze.cells.where("row = ?",i-1)
-          run = []
-
-          row.each do |cell|
-            run << cell
-
-            at_eastern_boundary  = (cell.east == nil) 
-            at_northern_boundary = (cell.north == nil) 
-
-            should_close_out = 
-              at_eastern_boundary ||
-              (!at_northern_boundary && rand(2) == 0) 
-
-            if should_close_out
-              member = run.sample
-              if member.north
-                member.link(Cell.find_by_id(member.north))
-                member.save
-                cell = Cell.find_by_id(member.north)
-                cell.link(Cell.find_by_id(cell.south))
-                cell.save
-              end
-              run.clear
-            else
-              cell.link(Cell.find_by_id(cell.east))
-              cell.save
-            end
-          end
-        end
-        
-      when "aldous_broder"
-        cell = @maze.cells.sample 
-        unvisited = @maze.cells.size - 1 
-
-        while unvisited > 0
-          list = []
-          list << cell.north if cell.north
-          list << cell.south if cell.south
-          list << cell.east  if cell.east
-          list << cell.west  if cell.west
-          neighbor = Cell.find_by_id(list.sample) 
-
-          if neighbor.links.empty?
-            cell.link(neighbor)
-            cell.save
-            unvisited -= 1 
-          end
-
-          cell = neighbor
-          cell.save 
-        end
-
-      else
-        # binary tree algorithm
-        puts "Starting Binary tree algorithm."
-        @maze.cells.each do |cell|
-          neighbors = []
-          neighbors << cell.south if cell.south
-          neighbors << cell.east if cell.east
-
-          index = rand(neighbors.length) 
-          neighbor = Cell.find_by_id(neighbors[index])
-        
-          cell.link(neighbor) if neighbor
-          cell.save
-        end
-
-      end
+      @maze.execute_algorithm
       @colored_maze = @maze.algo + "_" + @maze.id.to_s + ".png"
       @maze.file_name = @colored_maze
       @maze.save
@@ -138,7 +65,7 @@ class MazesController < ApplicationController
     @maze.cells.each do |cell|
       cell.destroy
     end
-    
+   
     destination = "/Users/noizat/code/workspace/maze_app/app/assets/images/#{@maze.file_name}"
     FileUtils.rm destination, :force => true
     destination = "/Users/noizat/code/workspace/maze_app/app/assets/images/white_" + "#{@maze.file_name}"

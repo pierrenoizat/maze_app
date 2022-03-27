@@ -2,7 +2,7 @@ class Maze < ApplicationRecord
   
   has_many :cells, dependent: :destroy
   
-  enum algo: { sidewinder: 0, aldous_broder: 1, kruskals: 2, binary_tree: 3 }
+  enum algo: { sidewinder: 0, aldous_broder: 1, kruskals: 2, binary_tree: 3, sand_pile: 4 }
   enum palette: { plain_red: 0, plain_orange: 1, plain_yellow: 2, light_green: 3,plain_green: 4, 
               marine_green: 5, light_blue: 6, plain_blue: 7, marine_blue: 8, plain_violet: 9,
                plain_pink: 10, plain_purple: 11, plain_grey: 12}
@@ -170,25 +170,45 @@ class Maze < ApplicationRecord
   end
   
   def compute_distances
-    
-    frontier = [ self.goal ]
-    distances = {}
-    distances[self.goal.id] = 0
-    while frontier.any? 
-      new_frontier = []
-      frontier.each do |cell| 
-        cell.links.each do |linked| 
-          next if distances[linked]
-          distances[linked] = distances[cell.id] + 1
-          
-          new_frontier << Cell.find_by_id(linked)
-        end 
+    if self.algo == 'sand_pile'
+      self.cells.each do |cell|
+        cell.distance = 0
+        cell.save
       end
-      frontier = new_frontier
-    end
-    self.cells.each do |cell|
-      cell.distance = distances[cell.id]
-      cell.save
+      i = 0
+      while i < 300
+        cell = self.cells.sample
+        cell.distance += 1
+        cell.save
+        while self.cells.pluck(:distance).compact.max > 3
+          cell = self.cells.select { |c| c.distance > 3 }.sample
+          cell.distance -= 4
+          cell.save
+          cell.avalanche
+        end
+        i += 1
+        # save img file
+      end
+      
+    else
+      frontier = [ self.goal ]
+      distances = {}
+      distances[self.goal.id] = 0
+      while frontier.any? 
+        new_frontier = []
+        frontier.each do |cell| 
+          cell.links.each do |linked| 
+            next if distances[linked]
+            distances[linked] = distances[cell.id] + 1
+            new_frontier << Cell.find_by_id(linked)
+          end 
+        end
+        frontier = new_frontier
+      end
+      self.cells.each do |cell|
+        cell.distance = distances[cell.id]
+        cell.save
+      end
     end
   end
 
@@ -218,10 +238,10 @@ class Maze < ApplicationRecord
     img_width = cell_size * self.column_count
     img_height = cell_size * self.row_count
     
-    background = ChunkyPNG::Color::WHITE
-    wall = ChunkyPNG::Color::BLACK
+    background = Color::WHITE
+    wall = Color::BLACK
 
-    img = ChunkyPNG::Image.new(img_width + 1, img_height + 1, background)
+    img = Image.new(img_width + 1, img_height + 1, background)
 
     [:backgrounds, :walls].each do |mode| 
       self.cells.each do |cell|
@@ -232,8 +252,6 @@ class Maze < ApplicationRecord
         y2 = (cell.row + 1) * cell_size
 
         if mode == :backgrounds and solution
-          #hex_color = '#eaffff' # even lighter 
-          #color = ChunkyPNG::Color.from_hex(hex_color)
           color = background_color_for(cell)
           img.rect(x1, y1, x2, y2, color, color) if color
         else
@@ -252,7 +270,8 @@ class Maze < ApplicationRecord
   def background_color_for(cell) 
     maximum = self.cells.pluck(:distance).compact.max
     distance = cell.distance or return nil
-    intensity = (maximum - distance).to_f / maximum
+    intensity = 0
+    intensity = (maximum - distance).to_f / maximum if maximum != 0
     dark = (255 * intensity).round
     bright = 128 + (127 * intensity).round
     case self.color
@@ -361,6 +380,79 @@ class Maze < ApplicationRecord
     blue = ( blue * intensity ).round
     
     Color.rgb(red, green, blue)
+  end
+  
+  def execute_algorithm
+    case self.algo
+    when "sidewinder"
+      row_max = self.row_count
+      for i in 1..row_max
+        self.reload
+        row = self.cells.where("row = ?",i-1)
+        run = []
+
+        row.each do |cell|
+          run << cell
+
+          at_eastern_boundary  = (cell.east == nil) 
+          at_northern_boundary = (cell.north == nil) 
+
+          should_close_out = 
+            at_eastern_boundary ||
+            (!at_northern_boundary && rand(2) == 0) 
+
+          if should_close_out
+            member = run.sample
+            if member.north
+              member.link(Cell.find_by_id(member.north))
+              member.save
+              cell = Cell.find_by_id(member.north)
+              cell.link(Cell.find_by_id(cell.south))
+              cell.save
+            end
+            run.clear
+          else
+            cell.link(Cell.find_by_id(cell.east))
+            cell.save
+          end
+        end
+      end
+      
+    when "aldous_broder"
+      cell = self.cells.sample 
+      unvisited = self.cells.size - 1 
+
+      while unvisited > 0
+        list = []
+        list << cell.north if cell.north
+        list << cell.south if cell.south
+        list << cell.east  if cell.east
+        list << cell.west  if cell.west
+        neighbor = Cell.find_by_id(list.sample) 
+
+        if neighbor.links.empty?
+          cell.link(neighbor)
+          cell.save
+          unvisited -= 1 
+        end
+
+        cell = neighbor
+        cell.save 
+      end
+
+    when "binary_tree"
+      self.cells.each do |cell|
+        neighbors = []
+        neighbors << cell.south if cell.south
+        neighbors << cell.east if cell.east
+
+        index = rand(neighbors.length) 
+        neighbor = Cell.find_by_id(neighbors[index])
+      
+        cell.link(neighbor) if neighbor
+        cell.save
+      end
+    end
   end
   
   

@@ -2,24 +2,22 @@ class Cell < ApplicationRecord
   
   belongs_to :maze
   
-  
-  def neighbors
-
-    row = self.row
-    col = self.column
+  def avalanche
+    cell = Cell.find_by_id(self.east)
+    cell.distance += 1 if cell
+    cell.save if cell
     
-    if row >= 1 
-      self.north = Cell.where("row = ? AND column = ?", row-1, col).pluck(:id).first
-    end
-    if row < self.maze.row_count-1
-      self.south = Cell.where("row = ? AND column = ?", row+1, col).pluck(:id).first
-    end
-    if col >= 1
-      self.west  = Cell.where("row = ? AND column = ?", row, col-1).pluck(:id).first
-    end
-    if col < self.maze.column_count-1
-      self.east  = Cell.where("row = ? AND column = ?", row, col+1).pluck(:id).first
-    end
+    cell = Cell.find_by_id(self.west)
+    cell.distance += 1 if cell
+    cell.save if cell
+    
+    cell = Cell.find_by_id(self.north)
+    cell.distance += 1 if cell
+    cell.save if cell
+    
+    cell = Cell.find_by_id(self.south)
+    cell.distance += 1 if cell
+    cell.save if cell
   end
   
   def linked?(i)

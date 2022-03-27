@@ -47,7 +47,7 @@ class CellsController < ApplicationController
   private
   
   def cell_params
-    params.require(:cell).permit(:row, :column)
+    params.require(:cell).permit(:row, :column,:distance)
   end
     
 end
