@@ -3,6 +3,7 @@ class Maze < ApplicationRecord
   has_many :cells, dependent: :destroy
   
   enum algo: { sidewinder: 0, aldous_broder: 1, kruskals: 2, binary_tree: 3, sand_pile: 4 }
+  enum wall: { no_walls: 0, black_walls: 1, white_walls: 2 }
   enum palette: { plain_red: 0, plain_orange: 1, plain_yellow: 2, light_green: 3,plain_green: 4, 
               marine_green: 5, light_blue: 6, plain_blue: 7, marine_blue: 8, plain_violet: 9,
                plain_pink: 10, plain_purple: 11, plain_grey: 12}
@@ -139,7 +140,6 @@ class Maze < ApplicationRecord
                    teal: 143,
                    thistle: 144,
                    tomato: 145,
-                   turquoise: 146,
                    violet: 20,
                    wheat: 64,
                    whitesmoke: 147,
@@ -156,6 +156,7 @@ class Maze < ApplicationRecord
   validates :background, inclusion: { in: ['white','burgundy','green','blue', 'kaki','turquoise'], message: :invalid }, :allow_nil => true
   validates :color, inclusion: { in: colors.keys, message: :invalid }, :allow_nil => true
   validates :palette, inclusion: { in: palettes.keys, message: :invalid }, :allow_nil => true
+  validates :wall, inclusion: { in: walls.keys, message: :invalid }, :allow_nil => true
   
   attr_reader :rows, :columns
   
@@ -234,7 +235,111 @@ class Maze < ApplicationRecord
     end
   end
   
-  def to_png(cell_size: 10, solution:true)
+  def to_png(cell_size: 10, solution:true, inset:0)
+    img_width = cell_size * self.column_count
+    img_height = cell_size * self.row_count
+    inset = (cell_size * inset).to_i
+    
+    background = Color::WHITE
+    
+    case self.wall
+      when 'black_walls'
+        wall = Color::BLACK
+      when 'white_walls'
+        wall = Color::WHITE
+      else
+        wall = "no_walls"
+    end
+
+    img = Image.new(img_width + 1, img_height + 1, background)
+
+    [:backgrounds, :walls].each do |mode| 
+      self.cells.each do |cell|
+        
+        x = cell.column * cell_size
+        y = cell.row * cell_size
+        if inset > 0
+          to_png_with_inset(img, cell, mode, cell_size, wall, x, y, inset)
+        else
+          to_png_without_inset(img, cell, mode, cell_size, solution, wall, x, y)
+        end
+      end
+    end
+
+    img
+  end
+  
+  def to_png_without_inset(img, cell, mode, cell_size, solution, wall, x, y) 
+    x1, y1 = x, y
+    x2 = x1 + cell_size
+    y2 = y1 + cell_size
+    unless solution
+      wall = Color::BLACK
+    end
+    if mode == :backgrounds and solution
+      color = background_color_for(cell) 
+      img.rect(x, y, x2, y2, color, color) if color
+    else
+      unless wall
+        wall = Color::BLACK
+      end
+      if wall != "no_walls"
+        img.line(x1, y1, x2, y1, wall) unless cell.north
+        img.line(x1, y1, x1, y2, wall) unless cell.west
+        img.line(x2, y1, x2, y2, wall) unless cell.linked?(cell.east) 
+        img.line(x1, y2, x2, y2, wall) unless cell.linked?(cell.south)
+      end
+    end
+  end
+  
+  def to_png_with_inset(img, cell, mode, cell_size, wall, x, y, inset)
+    x1, x2, x3, x4, y1, y2, y3, y4 = cell_coordinates_with_inset(x, y, cell_size, inset)
+    if mode == :backgrounds
+      #
+    else
+      if cell.linked?(cell.north)
+        img.line(x2, y1, x2, y2, wall)
+        img.line(x3, y1, x3, y2, wall)
+      else
+        img.line(x2, y2, x3, y2, wall)
+      end
+    
+      if cell.linked?(cell.south)
+        img.line(x2, y3, x2, y4, wall)
+        img.line(x3, y3, x3, y4, wall)
+      else
+        img.line(x2, y3, x3, y3, wall)
+      end
+    
+      if cell.linked?(cell.west) 
+        img.line(x1, y2, x2, y2, wall) 
+        img.line(x1, y3, x2, y3, wall)
+      else
+        img.line(x2, y2, x2, y3, wall)
+      end
+    
+      if cell.linked?(cell.east) 
+        img.line(x3, y2, x4, y2, wall) 
+        img.line(x3, y3, x4, y3, wall)
+      else
+        img.line(x3, y2, x3, y3, wall)
+      end
+    end
+  end
+  
+  def cell_coordinates_with_inset(x, y, cell_size, inset)
+    x1 = x
+    x4 = x + cell_size 
+    x2 = x1 + inset 
+    x3 = x4 - inset
+    y1 = y
+    y4 = y + cell_size 
+    y2 = y1 + inset 
+    y3 = y4 - inset
+    [x1, x2, x3, x4,y1, y2, y3, y4]
+  end
+  
+  def to_png_old(cell_size: 10, solution:true, inset:0)
     img_width = cell_size * self.column_count
     img_height = cell_size * self.row_count
     
@@ -455,6 +560,11 @@ class Maze < ApplicationRecord
     end
   end
   
+  def to_png_with_inset(img, cell, mode, cell_size, wall, x, y, inset)
+  end
+  
+  def cell_coordinates_with_inset(x, y, cell_size, inset)
+  end
   
 end
 

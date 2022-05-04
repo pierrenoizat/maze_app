@@ -31,6 +31,7 @@ class MazesController < ApplicationController
       @maze.compute_distances
       @maze.save
       @maze.reload
+      # @maze.to_png.save(@colored_maze)
       @maze.to_png.save(@colored_maze)
       destination = "/Users/noizat/code/workspace/maze_app/app/assets/images/#{@colored_maze}"
       FileUtils.copy_file(@colored_maze, destination, preserve = false, dereference = true)
@@ -78,7 +79,7 @@ class MazesController < ApplicationController
   private
   
   def maze_params
-    params.require(:maze).permit(:title, :algo, :row_count, :column_count, :background, :color, :palette)
+    params.require(:maze).permit(:title, :algo, :row_count, :column_count, :background, :color, :palette, :wall)
   end
     
 end

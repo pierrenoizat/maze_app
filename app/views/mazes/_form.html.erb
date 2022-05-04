@@ -44,6 +44,13 @@
   </div>
 	<br>
   <div>
+   <%= form.label :wall %><br>
+   <div class="input-field">
+	 <%= form.select :wall, options_for_select(Maze.walls.map {|key, value| [key.titleize, Maze.walls.key(value)]}),:include_blank => true %>
+   </div>
+  </div>
+	<br>
+  <div>
     <%= form.submit %>
   </div>
 <% end %>
