@@ -247,8 +247,10 @@ class Maze < ApplicationRecord
         wall = Color::BLACK
       when 'white_walls'
         wall = Color::WHITE
-      else
+      when "no_walls"
         wall = "no_walls"
+      else
+        wall = Color::BLACK
     end
 
     img = Image.new(img_width + 1, img_height + 1, background)
